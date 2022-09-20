@@ -2,6 +2,7 @@ from django.db import models
 from django.core.exceptions import ValidationError
 from django.core.validators import RegexValidator
 from django.contrib.auth.models import AbstractBaseUser
+from rest_framework_simplejwt.tokens import RefreshToken
 from django.core.validators import FileExtensionValidator
 from api.v1.users.enums import (
     Gender,
@@ -50,20 +51,22 @@ class User(AbstractBaseUser):
     REQUIRED_FIELDS = ['flf', 'role']
     
     objects = MyAccountManager()
-
+    
     def __str__(self):
         return self.flf
+    
+    def tokens(self):
+        refresh = RefreshToken.for_user(self)
+        return{
+            'refresh':str(refresh),
+            'access':str(refresh.access_token)
+        }
 
     def has_perm(self, perm, obj=None):
         return self.is_admin
 
     def has_module_perms(self, app_label):
         return True
-            
-    # def save(self, *args, **kwargs):
-    #     last_user_id = User.objects.last()
-    #     self.phone_number = f'{last_user_id.id}|{self.phone_number}'
-    #     super().save(*args, **kwargs)
 
 
 
@@ -82,6 +85,12 @@ class ApplicationForSponsor(models.Model):
     )
     money = models.FloatField(default=0)
     companyName = models.CharField(max_length=150, blank=True, null=True)
+    
+    created_at = models.DateTimeField(auto_now_add=True, editable=False)
+    updated_at = models.DateTimeField(auto_now=True, editable=False)
+    
+    is_active = models.BooleanField(default=True)
+    is_deleted = models.BooleanField(default=False)
     
     def __str__(self):
         if self.physicalPerson is True:
