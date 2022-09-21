@@ -39,3 +39,19 @@ class Gender(Enum):
     @classmethod
     def choices(cls):
         return tuple((i.name, i.value) for i in cls)
+    
+class StudentType(Enum):
+    bachelor = 'bachelor'
+    master = 'master'
+    
+    @classmethod
+    def choices(cls):
+        return tuple((i.name, i.value) for i in cls)
+    
+class IOHE(Enum):
+    TATU = 'TATU'
+    YOJU = 'YOJU'
+    
+    @classmethod
+    def choices(cls):
+        return tuple((i.name, i.value) for i in cls)

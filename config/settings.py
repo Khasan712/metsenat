@@ -61,6 +61,7 @@ INSTALLED_APPS += [
 # project apps
 INSTALLED_APPS += [
     'api.v1.users.apps.UsersConfig',
+    'api.v1.reports.apps.ReportsConfig',
 ]
 
 
@@ -204,6 +205,9 @@ REST_FRAMEWORK = {
     "DEFAULT_PERMISSION_CLASSES": [
         "rest_framework.permissions.AllowAny",
     ],
+    'DATETIME_FORMAT': '%Y-%m-%d %H:%M',
+    "PAGE_SIZE": 10,
+    'DEFAULT_PAGINATION_CLASS': 'rest_framework.pagination.LimitOffsetPagination',
 }
 
 

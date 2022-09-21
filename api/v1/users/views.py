@@ -1,22 +1,27 @@
-from functools import partial
 from django.shortcuts import render
-from api.v1.users import serializers
 from rest_framework import generics
 from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework import status, permissions
+from rest_framework.pagination import LimitOffsetPagination
 
 from api.v1.users.models import (
     ApplicationForSponsor,
+    Sponsor,
+    Student,
     User,
 )
 from api.v1.users.serializers import (
+    DetailStudentSerializers,
     LoginSerializer,
     LogoutSerializer,
     RegisterUserSerializer,
     ApplicationForSponsorSerializers,
     ListApplicationForSponsorSerializers,
-    UserUpdateSerializer
+    StudentSerializers,
+    StudentSponsorsSerializers,
+    UserUpdateSerializer,
+    RegisterSponsorSerializer
 )
 from api.v1.users.permissions import (
     IsAdmin,
@@ -29,6 +34,26 @@ class UserRegistrationView(generics.GenericAPIView):
     permission_classes = (permissions.IsAuthenticated, IsAdmin)
     serializer_class = RegisterUserSerializer
     queryset = User.objects.all()
+
+    def post(self, request):
+        user=request.data
+        serializer = self.serializer_class(data=user)
+        serializer.is_valid(raise_exception=True)
+        serializer.save()
+        user_data = serializer.data
+        return Response(
+            {
+                "success": True,
+                "message": 'User created suucessfully.',
+                "error": [],
+                "data": user_data,
+            }, status=status.HTTP_201_CREATED
+        )
+        
+class SponsorRegistrationView(generics.GenericAPIView):
+    permission_classes = (permissions.IsAuthenticated, IsAdmin)
+    serializer_class = RegisterSponsorSerializer
+    queryset = Sponsor.objects.all()
 
     def post(self, request):
         user=request.data
@@ -60,7 +85,7 @@ class LoginAPIView(generics.GenericAPIView):
                 "data": user_data,
             }, status=status.HTTP_200_OK
         )
-    
+
 class LogoutAPIView(generics.GenericAPIView):
     serializer_class = LogoutSerializer
     permission_classes = (permissions.IsAuthenticated,)
@@ -113,6 +138,52 @@ class DetailUserViews(generics.RetrieveUpdateAPIView):
     #     })
 
 
+
+class StudentCreate(generics.CreateAPIView):
+    queryset = Student.objects.all()
+    serializer_class = StudentSerializers
+
+class ListStudent(APIView):
+    
+    def get_filter(self, items, request):
+        params = request.query_params
+        studentType = params.get("studentType")
+        iohe = params.get("iohe")
+        if studentType:
+            items = items.filter(studentType=studentType)
+        if iohe:
+            items = items.filter(iohe=iohe)
+        return items
+    
+    def get(self, request):
+        items = Student.objects.filter(is_active=True, is_deleted=False)
+        students = self.get_filter(items, request)
+        paginator = LimitOffsetPagination()
+        result_page = paginator.paginate_queryset(students, request)
+        serializer = DetailStudentSerializers(result_page, many=True)
+        paginator_response = paginator.get_paginated_response(result_page).data
+        return Response(
+            {
+                "count": paginator_response['count'],
+                "next": paginator_response['next'],
+                "previous": paginator_response['previous'],
+                "data": serializer.data,
+            },
+            status=status.HTTP_200_OK,
+        )
+
+class StudentDetail(generics.RetrieveUpdateDestroyAPIView):
+    queryset = Student.objects.filter(is_active=True, is_deleted=False)
+    serializer_class = StudentSerializers
+
+
+class StudentSponsorsView(generics.ListAPIView):
+    queryset = Student.objects.all()
+    serializer_class = StudentSponsorsSerializers
+        
+
+
+
 class CreateApplicationForSponsor(generics.CreateAPIView):
     queryset = ApplicationForSponsor.objects.all()
     serializer_class = ApplicationForSponsorSerializers
@@ -121,6 +192,7 @@ class CreateApplicationForSponsor(generics.CreateAPIView):
 class ListApplicationForSponsor(generics.ListAPIView):
     permission_classes = (permissions.IsAuthenticated, IsAdmin)
     queryset = ApplicationForSponsor.objects.filter(is_active=True, is_deleted=False)
+    # queryset = ApplicationForSponsor.objects.raw('SELECT id, is_active, is_deleted FROM users_applicationforsponsor WHERE is_active=true AND is_deleted=false')
     serializer_class = ListApplicationForSponsorSerializers
 
 

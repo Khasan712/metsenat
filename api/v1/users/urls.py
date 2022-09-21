@@ -13,9 +13,15 @@ urlpatterns = [
     path('token/verify/', TokenVerifyView.as_view(), name='token_verify'),
     
     path('register/', views.UserRegistrationView.as_view()),
+    path('register/sponsor/', views.SponsorRegistrationView.as_view()),
     path('login/',views.LoginAPIView.as_view()),
     path('logout/', views.LogoutAPIView.as_view()),
     path('detail/<int:pk>/', views.DetailUserViews.as_view()),
+    
+    path('create/student/', views.StudentCreate.as_view()),
+    path('list/students/', views.ListStudent.as_view()),
+    path('detail/student/<int:pk>/', views.StudentDetail.as_view()),
+    path('sponsors/student/<int:pk>/', views.StudentSponsorsView.as_view()),
     
     path('form/create/', views.CreateApplicationForSponsor.as_view()),
     path('form/list/', views.ListApplicationForSponsor.as_view()),

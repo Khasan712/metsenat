@@ -1,4 +1,6 @@
 from django.contrib.auth.models import BaseUserManager
+from django.db.models import manager
+from api.v1.users.enums import UserRoles
 
 class MyAccountManager(BaseUserManager):
     
@@ -38,4 +40,20 @@ class MyAccountManager(BaseUserManager):
         user.is_staff = True
         user.save(using=self._db)
         return user
+
+
+
+class AdminManager(manager.Manager):
+    def get_queryset(self):
+        return super().get_queryset().filter(role=UserRoles.admin.value)
+
+
+class SponsorManager(manager.Manager):
+    def get_queryset(self):
+        return super().get_queryset().filter(role=UserRoles.sponsor.value)
+    
+
+# class StudentsManager(manager.Manager):
+#     def get_queryset(self):
+#         return super().get_queryset().filter(role=UserRoles.student.value)
 
